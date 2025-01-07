@@ -58,8 +58,8 @@ def load_fasta():
             results.append({
                 "id": record.id,
                 "similarity": similarity,
-                "gc_content": gc_content,
                 "relationship": relationship,
+                "gc_content": gc_content
             })
 
         update_results()  # Display the results
@@ -85,18 +85,39 @@ def update_results(sort_key=None, search_keyword=None):
 
     # Add the first person's details to the header
     results_text.insert(
-        tk.END, 
+        tk.END,
         f"Analyzing relationships for {first_person_id} (GC Content: {first_person_gc:.2f}%):\n\n"
     )
 
     for i, result in enumerate(filtered_results, start=1):
+        # Calculate the difference in GC content
+        gc_difference = abs(result['gc_content'] - first_person_gc)
+
+        if gc_difference == 0:
+            proximity_note = (
+                f"The GC content of this sequence is exactly the same as the GC content of {first_person_id}."
+            )
+        else:
+            proximity_note = (
+                f"The GC content of this sequence is {gc_difference:.2f}% "
+                f"{'higher' if result['gc_content'] > first_person_gc else 'lower'} "
+                f"than the GC content of {first_person_id}."
+            )
+
+        # Add a warning if GC content is outside the typical human range
+        if result['gc_content'] < 35 or result['gc_content'] > 60:
+            proximity_note += " This sequence's GC content is outside the typical range for humans (35-60%)."
+
         results_text.insert(
             tk.END,
             f"Sequence {i} ({result['id']}):\n"
             f"  Similarity: {result['similarity']:.2f}%\n"
+            f"  Relationship: {result['relationship']}\n"
             f"  GC Content: {result['gc_content']:.2f}%\n"
-            f"  Relationship: {result['relationship']}\n\n",
+            f"  {proximity_note}\n\n",
         )
+
+
 
 def clear_results():
     """Clear the results from the text box."""
